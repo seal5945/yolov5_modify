@@ -76,7 +76,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         half=False,  # use FP16 half-precision inference
         dnn=False,  # use OpenCV DNN for ONNX inference
         ):
-    traffic_light_exist = False
+    traffic_light_exist = False # 신호등이 이미지 안에 존재하는지 확인하는 변수
     source = str(source)
     save_img = not nosave and not source.endswith('.txt')  # save inference images
     is_file = Path(source).suffix[1:] in (IMG_FORMATS + VID_FORMATS)
@@ -175,10 +175,12 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                         c = int(cls)  # integer class
                         label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
                         annotator.box_label(xyxy, label, color=colors(c, True))
+                        # 레이블 되는 객체의 xywh 데이터를 yolov5의 포맷에 맞춰 구하기
                         x = (xyxy[0] + xyxy[2]) / len(imc[0]) / 2
                         y = (xyxy[1] + xyxy[3]) / len(imc) / 2
                         w = (xyxy[2] - xyxy[0]) / len(imc[0])
                         h = (xyxy[3] - xyxy[1]) / len(imc)
+                        # 레이블 이름에 "traffic light"가 있는지 확인하고 존재하면 클래스와 좌표값 추가
                         if label.find("traffic light") != -1:
                             traffic_light_exist = True
                             object_data += f"0 {x} {y} {w} {h} \n"

@@ -39,6 +39,7 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))  # add ROOT to PATH
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 
+
 from models.common import DetectMultiBackend
 from utils.datasets import IMG_FORMATS, VID_FORMATS, LoadImages, LoadStreams
 from utils.general import (LOGGER, check_file, check_img_size, check_imshow, check_requirements, colorstr,
@@ -75,6 +76,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         half=False,  # use FP16 half-precision inference
         dnn=False,  # use OpenCV DNN for ONNX inference
         ):
+    traffic_light_exist = False
     source = str(source)
     save_img = not nosave and not source.endswith('.txt')  # save inference images
     is_file = Path(source).suffix[1:] in (IMG_FORMATS + VID_FORMATS)
@@ -137,6 +139,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
         # Process predictions
         for i, det in enumerate(pred):  # per image
+            object_data = ""
             seen += 1
             if webcam:  # batch_size >= 1
                 p, im0, frame = path[i], im0s[i].copy(), dataset.count
@@ -172,6 +175,13 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                         c = int(cls)  # integer class
                         label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
                         annotator.box_label(xyxy, label, color=colors(c, True))
+                        x = (xyxy[0] + xyxy[2]) / len(imc[0]) / 2
+                        y = (xyxy[1] + xyxy[3]) / len(imc) / 2
+                        w = (xyxy[2] - xyxy[0]) / len(imc[0])
+                        h = (xyxy[3] - xyxy[1]) / len(imc)
+                        if label.find("traffic light") != -1:
+                            traffic_light_exist = True
+                            object_data += f"0 {x} {y} {w} {h} \n"
                         if save_crop:
                             save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
 
@@ -184,7 +194,21 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             # Save results (image with detections)
             if save_img:
                 if dataset.mode == 'image':
-                    cv2.imwrite(save_path, im0)
+                    if traffic_light_exist:
+                        cv2.imwrite(save_path, im0)
+                        # save_path.txt 파일 생성
+                        print(save_path)
+                        head, tail = os.path.split(save_path)
+                        head = os.path.join(head, "label")
+                        if not os.path.isdir(head):
+                            os.mkdir(head)
+                        save_label_path = os.path.join(head, tail)
+                        save_label_path = save_label_path.rsplit(".", 1)[0] + ".txt"
+                        print(save_label_path)
+                        f = open(save_label_path, 'w')
+                        f.write(object_data)
+                        f.close()
+                        traffic_light_exist = False
                 else:  # 'video' or 'stream'
                     if vid_path[i] != save_path:  # new video
                         vid_path[i] = save_path

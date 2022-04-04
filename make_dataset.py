@@ -76,7 +76,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         half=False,  # use FP16 half-precision inference
         dnn=False,  # use OpenCV DNN for ONNX inference
         ):
-    traffic_light_exist = False # 신호등이 이미지 안에 존재하는지 확인하는 변수
+    #traffic_light_exist = False # 신호등이 이미지 안에 존재하는지 확인하는 변수
     source = str(source)
     save_img = not nosave and not source.endswith('.txt')  # save inference images
     is_file = Path(source).suffix[1:] in (IMG_FORMATS + VID_FORMATS)
@@ -170,20 +170,23 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                         line = (cls, *xywh, conf) if save_conf else (cls, *xywh)  # label format
                         with open(txt_path + '.txt', 'a') as f:
                             f.write(('%g ' * len(line)).rstrip() % line + '\n')
-
                     if save_img or save_crop or view_img:  # Add bbox to image
                         c = int(cls)  # integer class
                         label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
                         annotator.box_label(xyxy, label, color=colors(c, True))
+                        print(label)
                         # 레이블 되는 객체의 xywh 데이터를 yolov5의 포맷에 맞춰 구하기
                         x = (xyxy[0] + xyxy[2]) / len(imc[0]) / 2
                         y = (xyxy[1] + xyxy[3]) / len(imc) / 2
                         w = (xyxy[2] - xyxy[0]) / len(imc[0])
                         h = (xyxy[3] - xyxy[1]) / len(imc)
                         # 레이블 이름에 "traffic light"가 있는지 확인하고 존재하면 클래스와 좌표값 추가
-                        if label.find("traffic light") != -1:
-                            traffic_light_exist = True
-                            object_data += f"0 {x} {y} {w} {h} \n"
+                        #if label.find("traffic light") != -1:
+                        #    traffic_light_exist = True
+                        exist_list = ["person","bicycle","car","motercycle","bus","truck","traffic light"] # 정지 표지판 뺐음
+                        new_label = label[:-5]
+                        if new_label in exist_list:
+                             object_data += f"0 {x} {y} {w} {h} \n"
                         if save_crop:
                             save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
 
@@ -196,21 +199,21 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             # Save results (image with detections)
             if save_img:
                 if dataset.mode == 'image':
-                    if traffic_light_exist:
-                        cv2.imwrite(save_path, im0)
-                        # save_path.txt 파일 생성
-                        print(save_path)
-                        head, tail = os.path.split(save_path)
-                        head = os.path.join(head, "label")
-                        if not os.path.isdir(head):
-                            os.mkdir(head)
-                        save_label_path = os.path.join(head, tail)
-                        save_label_path = save_label_path.rsplit(".", 1)[0] + ".txt"
-                        print(save_label_path)
-                        f = open(save_label_path, 'w')
-                        f.write(object_data)
-                        f.close()
-                        traffic_light_exist = False
+                    #if traffic_light_exist:
+                    cv2.imwrite(save_path, im0)
+                    # save_path.txt 파일 생성
+                    print(save_path)
+                    head, tail = os.path.split(save_path)
+                    head = os.path.join(head, "label")
+                    if not os.path.isdir(head):
+                        os.mkdir(head)
+                    save_label_path = os.path.join(head, tail)
+                    save_label_path = save_label_path.rsplit(".", 1)[0] + ".txt"
+                    print(save_label_path)
+                    f = open(save_label_path, 'w')
+                    f.write(object_data)
+                    f.close()
+                    #traffic_light_exist = False
                 else:  # 'video' or 'stream'
                     if vid_path[i] != save_path:  # new video
                         vid_path[i] = save_path

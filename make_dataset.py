@@ -186,7 +186,24 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                         exist_list = ["person","bicycle","car","motercycle","bus","truck","traffic light"] # 정지 표지판 뺐음
                         new_label = label[:-5]
                         if new_label in exist_list:
-                             object_data += f"0 {x} {y} {w} {h} \n"
+                            if new_label == "person":
+                                numberi = 0
+                            elif new_label == "bicycle":
+                                numberi = 1
+                            elif new_label == "car":
+                                numberi = 2
+                            elif new_label == "motercycle":
+                                numberi = 3
+                            elif new_label == "bus":
+                                numberi = 4
+                            elif new_label == "truck":
+                                numberi = 5
+                            elif new_label == "traffic light":
+                                numberi = 6
+
+                            object_data += f"{numberi} {x} {y} {w} {h} \n"
+
+
                         if save_crop:
                             save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
 

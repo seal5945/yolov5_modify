@@ -93,7 +93,7 @@ class Annotator:
                 # self.draw.text((box[0], box[1]), label, fill=txt_color, font=self.font, anchor='ls')  # for PIL>8.0
                 self.draw.text((box[0], box[1] - h if outside else box[1]), label, fill=txt_color, font=self.font)
         else:  # cv2
-            exist_list = ["person", "bicycle", "car", "motercycle", "bus", "truck", "traffic light"] # 정지 표지판 뺐음
+            exist_list = ["traffic light"] # 정지 표지판 뺐음
             new_label = label[:-5]
             if new_label in exist_list:
                 p1, p2 = (int(box[0]), int(box[1])), (int(box[2]), int(box[3]))

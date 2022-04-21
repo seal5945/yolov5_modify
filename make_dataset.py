@@ -207,7 +207,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                         # save_path.txt 파일 생성
                         print(save_path)
                         head, tail = os.path.split(save_path)
-                        head = os.path.join(head, "label")
+                        head = os.path.join(head, "labels")
                         if not os.path.isdir(head):
                             os.mkdir(head)
                         save_label_path = os.path.join(head, tail)
